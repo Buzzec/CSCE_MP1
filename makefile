@@ -4,7 +4,7 @@
 # clang++ is for Mac OS 
 C++ = clang++
 # g++ is for most Linux
-# C++ = g++
+# C++ = g++ -std
 
 all: memtest
 

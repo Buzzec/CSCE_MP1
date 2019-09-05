@@ -44,7 +44,7 @@ typedef void* Addr;
 class MyAllocator{
 
 private:
-    void* data;
+    void* const data;
     size_t offset;
     size_t size;
 

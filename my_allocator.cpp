@@ -56,11 +56,7 @@
 /* FUNCTIONS FOR CLASS MyAllocator */
 /*--------------------------------------------------------------------------*/
 
-MyAllocator::MyAllocator(size_t _basic_block_size, size_t _size){
-    data = std::malloc(_size);
-    offset = 0;
-    size = _size;
-}
+MyAllocator::MyAllocator(size_t _basic_block_size, size_t _size) : data(std::malloc(_size)), offset(0), size(_size){}
 
 MyAllocator::~MyAllocator(){
     std::free(data);
