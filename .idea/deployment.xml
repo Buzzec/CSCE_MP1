@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="Remote Host (f169e7a0-ab34-488d-9d7a-17ae7a6eaefa)">
+    <serverData>
+      <paths name="Remote Host (f169e7a0-ab34-488d-9d7a-17ae7a6eaefa)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/ugrads/b/buzzec/tmp/" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-remote-host" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-debug-remote-host" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
