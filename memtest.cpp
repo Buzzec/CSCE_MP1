@@ -97,7 +97,7 @@ int main(int argc, char* argv[]){
     const char* b_val = "";
     const char* s_val = "";
 
-    while((c = getopt(argc, argv, "b::s::")) != -1){
+    while((c = getopt(argc, argv, "b:s:")) != -1){
         switch(c){
             case 'b':
                 b_val = optarg;
@@ -106,7 +106,10 @@ int main(int argc, char* argv[]){
                 s_val = optarg;
                 break;
             case '?':
-                if(isprint(optopt))
+                if(optopt == 'b' || optopt == 's'){
+                    std::cout << "Option -" << optopt << " requires numeric argument" << std::endl;
+                }
+                else if(isprint(optopt))
                     std::cerr << "Unknown option `-" << optopt << std::endl;
                 else
                     std::cerr << "Unknown option character \\x" << optopt << std::endl;
@@ -132,7 +135,7 @@ int main(int argc, char* argv[]){
     }
 
     if(s_val[0] != '\0'){
-        auto val = strtoull(b_val, nullptr, 10);
+        auto val = strtoull(s_val, nullptr, 10);
         if(val == 0ULL){
             std::cerr << "-s must have numeric or non-zero argument" << std::endl;
             return 1;
@@ -148,10 +151,10 @@ int main(int argc, char* argv[]){
         block_size = mem_size;
     }
 
-    std::cout << "Block Size: " << block_size << std::endl;
-    std::cout << "Mem Size: " << mem_size << std::endl;
+//    std::cout << "Block Size: " << block_size << std::endl;
+//    std::cout << "Mem Size: " << mem_size << std::endl;
 
-//    ackerman_main(block_size, mem_size);
+    ackerman_main(block_size, mem_size);
 }
 
 /*--------------------------------------------------------------------------*/
