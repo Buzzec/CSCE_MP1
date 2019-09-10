@@ -30,25 +30,30 @@
 /*--------------------------------------------------------------------------*/
 
 class SegmentHeader{
-
 private:
-
     static const unsigned COOKIE_VALUE = 0xBAAB00;
     unsigned int cookie; /* To check whether this is a genuine header! */
     size_t length;
     bool is_free;
 
-    // You will need additional data here!
+    SegmentHeader* next;
+    SegmentHeader* prev;
+
+    friend class FreeList;
 
 public:
-
-    SegmentHeader(size_t _length, bool _is_free = true);
+    explicit SegmentHeader(size_t _length, bool _is_free = true, SegmentHeader* _next = nullptr,
+                           SegmentHeader* _prev = nullptr);
 
     ~SegmentHeader();
     /* We probably won't need the destructor. */
 
     void CheckValid();
     /* Check if the cookie is valid. */
+
+    size_t getLength();
+
+    void setFree(bool _is_free);
 };
 
 /*--------------------------------------------------------------------------*/
@@ -62,10 +67,10 @@ public:
 /*--------------------------------------------------------------------------*/
 
 class FreeList{
-
 private:
+    SegmentHeader* first;
 
-    /* Here you add whatever private members you need...*/
+    bool collapse(SegmentHeader* _segment);
 
 public:
 
@@ -82,6 +87,8 @@ public:
 
     bool Add(SegmentHeader* _segment);
     /* Add the segment to the given free list. */
+
+    SegmentHeader* FindFirstFreeBiggerThan(size_t length);
 
 };
 

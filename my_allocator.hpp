@@ -24,6 +24,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <cstdlib>
+#include "free_list.hpp"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
@@ -45,7 +46,8 @@ class MyAllocator{
 
 private:
     void* const data;
-    size_t offset;
+    FreeList freeList;
+    size_t block_size;
     size_t size;
 
 public:

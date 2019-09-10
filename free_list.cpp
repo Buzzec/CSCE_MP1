@@ -30,9 +30,6 @@
 /* NAME SPACES */
 /*--------------------------------------------------------------------------*/
 
-using namespace std;
-/* I know, it's a bad habit, but this is a tiny program anyway... */
-
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
@@ -55,43 +52,117 @@ using namespace std;
 /* FUNCTIONS FOR CLASS SegmentHeader */
 /*--------------------------------------------------------------------------*/
 
-SegmentHeader::SegmentHeader(size_t _length, bool _is_free){
-    length = _length;
-    is_free = _is_free;
-    cookie = COOKIE_VALUE;
-    // You may need to initialize more members here!
-}
+SegmentHeader::SegmentHeader(size_t _length, bool _is_free, SegmentHeader* _next, SegmentHeader* _prev)
+        : length(_length), is_free(_is_free), cookie(COOKIE_VALUE), next(_next), prev(_prev){}
 
-SegmentHeader::~SegmentHeader(){
-    // You may need to add code here.
-}
+SegmentHeader::~SegmentHeader() = default;
 
 
 void SegmentHeader::CheckValid(){
     if(cookie != COOKIE_VALUE){
-        cout << "INVALID SEGMENT HEADER!!" << endl;
+        std::cout << "INVALID SEGMENT HEADER!!" << std::endl;
         assert(false);
         // You will need to check with the debugger to see how we got into this
         // predicament.
     }
 }
 
+size_t SegmentHeader::getLength(){
+    return length;
+}
+
+void SegmentHeader::setFree(bool _is_free){
+    is_free = _is_free;
+}
+
 /*--------------------------------------------------------------------------*/
 /* FUNCTIONS FOR CLASS FreeList */
 /*--------------------------------------------------------------------------*/
 
-FreeList::FreeList(){
-    // You will need to add code here!
-}
+FreeList::FreeList() : first(nullptr){}
 
-FreeList::~FreeList(){
-    // You may need to add code here.
-}
+FreeList::~FreeList() = default;
 
 bool FreeList::Add(SegmentHeader* _segment){
-    assert(false); // This implementation does nothing, other than abort.
+    if(_segment == nullptr){
+        return false;
+    }
+
+    SegmentHeader* next = first;
+    SegmentHeader* prev = nullptr;
+    while(_segment > next && next != nullptr){
+        prev = next;
+        next = next->next;
+    }
+    _segment->next = next;
+    _segment->prev = prev;
+    if(next != nullptr){
+        next->prev = _segment;
+    }
+    if(prev != nullptr){
+        prev->next = _segment;
+    }
+    else{
+        first = _segment;
+    }
+    return collapse(_segment);
 }
 
 bool FreeList::Remove(SegmentHeader* _segment){
-    assert(false); // This implementation does nothing, other than abort.
+    if(_segment == nullptr){
+        return false;
+    }
+
+    auto item = first;
+    while(item != _segment && item != nullptr){
+        item = item->next;
+    }
+    if(item == _segment){
+        if(_segment->prev != nullptr){
+            _segment->prev->next = _segment->next;
+        }
+        else{
+            first = _segment->next;
+        }
+        if(_segment->next != nullptr){
+            _segment->next->prev = _segment->prev;
+        }
+        _segment->next = nullptr;
+        _segment->prev = nullptr;
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+SegmentHeader* FreeList::FindFirstFreeBiggerThan(size_t length){
+    SegmentHeader* item = first;
+    while(item != nullptr && item->length < length){
+        item = item->next;
+    }
+    return item;
+}
+
+bool FreeList::collapse(SegmentHeader* _segment){
+    if(_segment == nullptr){
+        return false;
+    }
+    if(_segment->is_free){
+        auto prev = _segment->prev;
+        auto next = _segment->next;
+        if(prev != nullptr && prev->is_free && uintptr_t(prev) + prev->length == uintptr_t(_segment)){
+            if(!Remove(prev) || !Remove(_segment)){
+                return false;
+            }
+            return Add(new(prev)SegmentHeader{_segment->length + prev->length});
+        }
+        if(next != nullptr && next->is_free && uintptr_t(_segment) + _segment->length == uintptr_t(next)){
+            if(!Remove(_segment->next) || !Remove(_segment)){
+                return false;
+            }
+            return Add(new(_segment)SegmentHeader{_segment->length + next->length});
+        }
+    }
+    return true;
 }

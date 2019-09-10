@@ -6,7 +6,7 @@ project(MP1)
 
 add_executable(
         Memtest
+        my_allocator.cpp
         free_list.cpp
         memtest.cpp
-        my_allocator.cpp
 )
