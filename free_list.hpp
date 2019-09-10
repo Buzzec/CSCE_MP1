@@ -68,7 +68,7 @@ public:
 
 class FreeList{
 private:
-    SegmentHeader* first;
+    SegmentHeader* head;
 
     bool collapse(SegmentHeader* _segment);
 

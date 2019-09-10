@@ -79,7 +79,7 @@ void SegmentHeader::setFree(bool _is_free){
 /* FUNCTIONS FOR CLASS FreeList */
 /*--------------------------------------------------------------------------*/
 
-FreeList::FreeList() : first(nullptr){}
+FreeList::FreeList() : head(nullptr){}
 
 FreeList::~FreeList() = default;
 
@@ -88,7 +88,7 @@ bool FreeList::Add(SegmentHeader* _segment){
         return false;
     }
 
-    SegmentHeader* next = first;
+    SegmentHeader* next = head;
     SegmentHeader* prev = nullptr;
     while(_segment > next && next != nullptr){
         prev = next;
@@ -103,7 +103,7 @@ bool FreeList::Add(SegmentHeader* _segment){
         prev->next = _segment;
     }
     else{
-        first = _segment;
+        head = _segment;
     }
     return collapse(_segment);
 }
@@ -113,7 +113,7 @@ bool FreeList::Remove(SegmentHeader* _segment){
         return false;
     }
 
-    auto item = first;
+    auto item = head;
     while(item != _segment && item != nullptr){
         item = item->next;
     }
@@ -122,7 +122,7 @@ bool FreeList::Remove(SegmentHeader* _segment){
             _segment->prev->next = _segment->next;
         }
         else{
-            first = _segment->next;
+            head = _segment->next;
         }
         if(_segment->next != nullptr){
             _segment->next->prev = _segment->prev;
@@ -137,7 +137,7 @@ bool FreeList::Remove(SegmentHeader* _segment){
 }
 
 SegmentHeader* FreeList::FindFirstFreeBiggerThan(size_t length){
-    SegmentHeader* item = first;
+    SegmentHeader* item = head;
     while(item != nullptr && item->length < length){
         item = item->next;
     }

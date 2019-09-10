@@ -86,7 +86,7 @@ Addr MyAllocator::Malloc(size_t _length){
         return nullptr;
     }
     freeList.Remove(segment);
-    if(real_length == segment->getLength()){
+    if(real_length - segment->getLength() <= sizeof(SegmentHeader)){
         segment->setFree(false);
     }
     else{
@@ -106,4 +106,3 @@ bool MyAllocator::Free(Addr _a){
     real_addr->setFree(true);
     return freeList.Add(real_addr);
 }
-
