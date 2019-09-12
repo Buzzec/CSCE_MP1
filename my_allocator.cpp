@@ -71,6 +71,7 @@ MyAllocator::MyAllocator(size_t _basic_block_size, size_t _size) :
         size(normalize(_basic_block_size, _size)),
         data(std::malloc(_size + sizeof(SegmentHeader))),
         freeList(){
+    assert(data != nullptr);
     auto* first = new(data)SegmentHeader{size};
     assert(freeList.Add(first));
 }
