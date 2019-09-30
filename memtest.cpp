@@ -54,7 +54,7 @@
 /* GLOBAL DATA */
 /*--------------------------------------------------------------------------*/
 
-MyAllocator* my_allocator;
+my_allocator* my_allocator;
 /* We are defining our allocator as a global resource. */
 
 /*--------------------------------------------------------------------------*/
@@ -197,7 +197,7 @@ void ackerman_main(size_t _block_size, size_t _mem_size){
 
         std::cout << "      a = " << a << ", b = " << b << std::endl;
 
-        my_allocator = new MyAllocator(_block_size, _mem_size);
+        my_allocator = new class my_allocator(_block_size, _mem_size);
 
         assert(gettimeofday(&tp_start, nullptr) == 0);
         /* Assert aborts if there is a problem with gettimeofday.
@@ -247,7 +247,7 @@ int ackerman(int a, int b){
     int result = 0;
 
     /* Here we allocate the memory using our own allocator. */
-    char* mem = (char*) my_allocator->Malloc(to_alloc * sizeof(char));
+    char* mem = (char*) my_allocator->malloc(to_alloc * sizeof(char));
 
     num_allocations++;
 
@@ -286,7 +286,7 @@ int ackerman(int a, int b){
         }
 
         /* Now we free the memory allocated above; we use our own allocator. */
-        assert(my_allocator->Free(mem)); /* We crash if Free() fails */
+        assert(my_allocator->free(mem)); /* We crash if Free() fails */
     }
 
     return result;

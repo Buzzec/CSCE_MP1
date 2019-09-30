@@ -1,59 +1,37 @@
-/* 
-    File: free_list.hpp
-
-    Author: <your name>
-            Department of Computer Science and Engineering
-            Texas A&M University
-    Date  : <date>
-
-    Modified:
-
-*/
-
-#ifndef _free_list_hpp_                   // include file only once
+#ifndef _free_list_hpp_
 #define _free_list_hpp_
 
-/*--------------------------------------------------------------------------*/
-/* DEFINES */
-/*--------------------------------------------------------------------------*/
-
-/* -- (none) -- */
-
-/*--------------------------------------------------------------------------*/
-/* INCLUDES */
-/*--------------------------------------------------------------------------*/
-
 #include <cstdlib>
+#include <cstdint>
 
-/*--------------------------------------------------------------------------*/
-/* DATA STRUCTURES */
-/*--------------------------------------------------------------------------*/
+class free_list;
 
-class SegmentHeader{
+class segment_header{
 private:
-    static const unsigned COOKIE_VALUE = 0xBAAB00;
-    unsigned int cookie; /* To check whether this is a genuine header! */
-    size_t length;
-    bool is_free;
+    static const uint8_t COOKIE_FLAG = 0b11111000;
+    static const uint8_t PARENT_LEFT_FLAG = 0b00000001;
+    static const uint8_t INHERITED_LEFT_FLAG = 0b00000010;
+    static const uint8_t FREE_FLAG = 0b00000100;
+    uint8_t size_index;
+    uint8_t flags;
+    segment_header* next;
+    segment_header* prev;
 
-    SegmentHeader* next;
-    SegmentHeader* prev;
-
-    friend class FreeList;
+    friend class free_list;
 
 public:
-    explicit SegmentHeader(size_t _length, bool _is_free = true, SegmentHeader* _next = nullptr,
-                           SegmentHeader* _prev = nullptr);
+    segment_header(size_t size_index, bool parent_is_left, bool inherited_is_left, bool _is_free = true,
+                   segment_header* _next = nullptr, segment_header* _prev = nullptr);
+    ~segment_header();
 
-    ~SegmentHeader();
-    /* We probably won't need the destructor. */
+    void check_valid();
 
-    void CheckValid();
-    /* Check if the cookie is valid. */
+    size_t get_size_index();
+    bool is_parent_left();
+    bool is_inherited_left();
+    bool is_free();
 
-    size_t getLength();
-
-    void setFree(bool _is_free);
+    void set_free(bool is_free);
 };
 
 /*--------------------------------------------------------------------------*/
@@ -63,33 +41,25 @@ public:
 /* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
-/* CLASS  FreeList */
+/* CLASS  free_list */
 /*--------------------------------------------------------------------------*/
 
-class FreeList{
+class free_list{
 private:
-    SegmentHeader* head;
-
-    bool collapse(SegmentHeader* _segment);
+    segment_header* head;
+    uint8_t size_index;
 
 public:
+    explicit free_list(uint8_t size_index);
 
-    FreeList();
-    /* This function initializes a new free-list. */
+    ~free_list();
 
-    ~FreeList();
-    /* We probably don't need a destructor. */
+    bool remove(segment_header* segment);
+    segment_header* pop_head();
+    bool add(void* segment, bool parent_is_left, bool inherited_is_left);
 
-    bool Remove(SegmentHeader* _segment);
-    /* Remove the given segment from the given free list.
-       Returns true if the function succeeds.
-    */
-
-    bool Add(SegmentHeader* _segment);
-    /* Add the segment to the given free list. */
-
-    SegmentHeader* FindFirstFreeBiggerThan(size_t length);
-
+    uint8_t get_size_index() const;
+    bool is_empty() const;
 };
 
 #endif 

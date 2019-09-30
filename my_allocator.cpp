@@ -66,44 +66,97 @@ T normalize(T block_size, T length){
     }
 }
 
-MyAllocator::MyAllocator(size_t _basic_block_size, size_t _size) :
-        block_size(_basic_block_size),
-        size(normalize(_basic_block_size, _size)),
-        data(std::malloc(_size + sizeof(SegmentHeader))),
-        freeList(){
-    assert(data != nullptr);
-    auto* first = new(data)SegmentHeader{size};
-    assert(freeList.Add(first));
+/**
+ *
+ * @param free_lists
+ * @param num_blocks
+ * @return actual number of blocks
+ */
+size_t fill_free_lists(std::vector<std::pair<size_t, free_list>>& free_lists, size_t num_blocks){
+    free_lists.emplace_back(1, free_list{0});
+    free_lists.emplace_back(1, free_list{1});
+    uint8_t index = 2;
+    while(free_lists.back().first < num_blocks){
+        size_t size = free_lists.back().first + free_lists.at(free_lists.size() - 2).first;
+        free_lists.emplace_back(size, free_list{index});
+        ++index;
+    }
+    return free_lists.back().first;
 }
 
-MyAllocator::~MyAllocator(){
+my_allocator::my_allocator(size_t block_size, size_t num_bytes) :
+        free_lists(),
+        block_size(0),
+        num_blocks(0),
+        data(nullptr){
+    this->block_size = block_size;
+    num_blocks = fill_free_lists(free_lists, normalize(block_size, num_bytes));
+    data = std::malloc(this->block_size * this->num_blocks);
+    assert(data != nullptr);
+    free_lists.back().second.add(data, true, true);
+}
+
+my_allocator::~my_allocator(){
     std::free(data);
 }
 
-Addr MyAllocator::Malloc(size_t _length){
-    auto real_length = normalize(block_size, _length + sizeof(SegmentHeader));
-    auto segment = freeList.FindFirstFreeBiggerThan(real_length);
-    if(segment == nullptr){
+Addr my_allocator::malloc(size_t num_bytes){
+    size_t target_num_blocks = normalize(block_size, num_bytes + sizeof(segment_header));
+    if(target_num_blocks > free_lists.back().first){
         return nullptr;
     }
-    freeList.Remove(segment);
-    if(real_length - segment->getLength() <= sizeof(SegmentHeader)){
-        segment->setFree(false);
+    uint8_t target_index = 0;
+    for(; free_lists.at(target_index).first < target_num_blocks; target_index++);
+    uint8_t first_free_index = target_index;
+    for(; first_free_index < free_lists.size() &&
+          free_lists.at(first_free_index).second.is_empty(); first_free_index++);
+    if(first_free_index == free_lists.size()){
+        return nullptr;
     }
-    else{
-        auto old_length = segment->getLength();
-        segment = new(segment)SegmentHeader{real_length, false};
-        auto next_segment = new(reinterpret_cast<SegmentHeader*>(uintptr_t(segment) + real_length))SegmentHeader{
-                old_length - real_length
-        };
-        freeList.Add(next_segment);
+    if(first_free_index == target_index || (target_index == 0 && first_free_index == 1)){
+        auto out = free_lists.at(first_free_index).second.pop_head();
+        return reinterpret_cast<Addr>(uintptr_t(out) + sizeof(segment_header));
     }
-    return reinterpret_cast<Addr>(uintptr_t(segment) + sizeof(SegmentHeader));
+    auto splitee = free_lists.at(first_free_index).second.pop_head();
+    free_lists.at(first_free_index - 1).second.add(
+            reinterpret_cast<void*>(uintptr_t(splitee) + free_lists.at(first_free_index - 2).first * block_size), false,
+            splitee->is_inherited_left());
+    free_lists.at(first_free_index - 2).second.add(splitee, true, splitee->is_parent_left());
+    return malloc(num_bytes);
 }
 
-bool MyAllocator::Free(Addr _a){
-    auto real_addr = reinterpret_cast<SegmentHeader*>(uintptr_t(_a) - sizeof(SegmentHeader));
-    real_addr->CheckValid();
-    real_addr->setFree(true);
-    return freeList.Add(real_addr);
+bool my_allocator::free(Addr _a){
+    if(_a == nullptr){
+        return false;
+    }
+    auto segment = reinterpret_cast<segment_header*>(uintptr_t(_a) - sizeof(segment_header));
+    segment->check_valid();
+    free_lists.at(segment->get_size_index()).second.add(segment, segment->is_parent_left(),
+                                                        segment->is_inherited_left());
+    if(segment->get_size_index() < free_lists.size() - 1){
+        segment_header* left_segment;
+        segment_header* right_segment;
+        if(segment->is_parent_left()){
+            left_segment = segment;
+            right_segment = reinterpret_cast<segment_header*>(uintptr_t(segment) +
+                                                              free_lists.at(segment->get_size_index()).first *
+                                                              block_size);
+        }
+        else{
+            left_segment = reinterpret_cast<segment_header*>(uintptr_t(segment) +
+                                                             free_lists.at(segment->get_size_index() - 1).first *
+                                                             block_size);
+            right_segment = segment;
+        }
+        if(!left_segment->is_free() || !right_segment->is_free() ||
+           right_segment->get_size_index() - left_segment->get_size_index() != 1){
+            return true;
+        }
+        assert(free_lists.at(left_segment->get_size_index()).second.remove(left_segment));
+        assert(free_lists.at(right_segment->get_size_index()).second.remove(right_segment));
+        new(left_segment)segment_header{left_segment->get_size_index() + 2, left_segment->is_inherited_left(),
+                                        right_segment->is_inherited_left(), false};
+        return free(reinterpret_cast<Addr>(uintptr_t(left_segment) + sizeof(segment_header)));
+    }
+    return true;
 }

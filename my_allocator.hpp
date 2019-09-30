@@ -24,6 +24,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <cstdlib>
+#include <vector>
 #include "free_list.hpp"
 
 /*--------------------------------------------------------------------------*/
@@ -42,16 +43,16 @@ typedef void* Addr;
 /* CLASS   MyAllocator */
 /*--------------------------------------------------------------------------*/
 
-class MyAllocator{
+class my_allocator{
 
 private:
-    void* const data;
-    FreeList freeList;
+    void* data;
+    std::vector<std::pair<size_t, free_list>> free_lists;
     size_t block_size;
-    size_t size;
+    size_t num_blocks;
 
 public:
-    MyAllocator(size_t _basic_block_size, size_t _size);
+    my_allocator(size_t block_size, size_t num_bytes);
     /* This function initializes the memory allocator and makes a portion of
        ’_size’ bytes available. The allocator uses a ’_basic_block_size’ as
        its minimal unit of allocation.
@@ -62,16 +63,16 @@ public:
        as 'unsigned int'.
     */
 
-    ~MyAllocator();
+    ~my_allocator();
     /* This function returns any allocated memory to the operating system.
     */
 
-    Addr Malloc(size_t _length);
+    Addr malloc(size_t num_bytes);
     /* Allocate _length number of bytes of free memory and returns the
        address of the allocated portion. Returns nullptr when out of memory.
     */
 
-    bool Free(Addr _a);
+    bool free(Addr _a);
     /* Frees the section of physical memory previously allocated
        using ’Malloc’. Returns true if everything ok. */
 };

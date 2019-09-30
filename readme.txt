@@ -12,8 +12,8 @@ Here comes the source code for MP1. The following files are included:
    .. Processing of command-line arguments.
 
 -- free_list.hpp/cpp: Heder/Implementation files for segment headers
-    and free-lists. Currently the Add/Remove functions in class
-    FreeList unceremoniously crash. You will need to add your
+    and free-lists. Currently the add/remove functions in class
+    free_list unceremoniously crash. You will need to add your
     implementation of these functions.
     
 -- makefile : This file tells 'make' how to compile everything together.
